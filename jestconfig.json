@@ -1,0 +1,11 @@
+{
+  "transform": {
+    "^.+\\.(t|j)sx?$": "ts-jest"
+  },
+  "testRegex": ".*\\.test\\.ts$",
+  "collectCoverageFrom": ["src/**/*.{ts,js}"],
+  "globals":{
+    "AUTH0_CLIENT_SECRET": true,
+    "AUTH0_CLIENT_ID": true
+  }
+}

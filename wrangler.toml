@@ -1,0 +1,16 @@
+name = "stage-auth"
+type = "javascript"
+
+zone_id = "0f02aded663a88d4e31276b250ecc1e1"
+account_id = "44cb8adab02ef7b388b48091a6be4673"
+route = "stage.saladsimulator.com/*"
+workers_dev = true
+
+[vars]
+AUTH0_CLIENT_ID = "bwTWTXSpIJ5jIblPWxN278bU06J25ine"
+
+[build]
+command = "npm install && npm run build"
+[build.upload]
+format = "service-worker"
+
