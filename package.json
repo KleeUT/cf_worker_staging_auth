@@ -41,6 +41,7 @@
     "wrangler": "0.0.2"
   },
   "dependencies": {
+    "@peculiar/webcrypto": "^1.1.7",
     "@types/jsonwebtoken": "^8.5.5",
     "base64-arraybuffer": "^1.0.1",
     "jsonwebtoken": "^8.5.1",

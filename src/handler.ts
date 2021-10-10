@@ -39,7 +39,7 @@ export async function handleRequest(
       break;
     case '/secrettest': {
       const code = await codeVerifier();
-      const challenge = generateChallenge(code);
+      const challenge = await generateChallenge(code);
       response = new Response(
         `sssssh secret is "${AUTH0_CLIENT_SECRET}" clientid = "${AUTH0_CLIENT_ID}", verifierCode=${code} challenge =${challenge}`,
       );
@@ -65,6 +65,8 @@ async function handleAuthCallback(
   }
 
   const codeVerifier = await getCodeCookie(request);
+  const challenge = await generateChallenge(codeVerifier);
+  console.log(`Regenerated challenge=${challenge} from ${codeVerifier}`);
   try {
     const bod = await auth0Helper.exchangeCodeForToken(
       fetch,

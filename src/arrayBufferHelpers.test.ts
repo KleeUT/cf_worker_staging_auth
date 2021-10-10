@@ -1,5 +1,5 @@
 import { str2Uin8Array, ab2str } from './ArrayBufferHelpers';
-// import crypto from 'crypto';
+
 describe('Array buffer helpers', () => {
   it('should return the same string after converting and de-converting', () => {
     const sampleString = 'a sample string';
@@ -9,6 +9,6 @@ describe('Array buffer helpers', () => {
     // expect(ab.byteLength).toEqual(15);
     expect(outputStr.split('').length).toEqual(sampleString.split('').length);
     expect(outputStr).toEqual(sampleString);
-    expect(outputStr == sampleString).toBeTruthy();
+    expect(outputStr === sampleString).toBeTruthy();
   });
 });

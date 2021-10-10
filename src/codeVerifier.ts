@@ -1,6 +1,6 @@
 // import { encode } from 'base64-arraybuffer';
 import { ab2str, str2Uin8Array } from './ArrayBufferHelpers';
-
+import { Crypto } from '@peculiar/webcrypto';
 export async function codeVerifier(): Promise<string> {
   const rando = randomCode();
   const encoded = base64URLEncode(rando);
@@ -31,8 +31,11 @@ export async function generateChallenge(verifier: string): Promise<string> {
 }
 
 async function sha256(data: Uint8Array): Promise<string> {
+  const crypt = new Crypto();
   console.log('converting to sha');
-  const sha = await globalThis.crypto.subtle.digest('SHA-256', data);
+  // const sha = await globalThis.crypto.subtle.digest('SHA-256', data);
+  const sha = await crypt.subtle.digest('SHA-256', data);
+
   console.log('Created sha');
   return ab2str(sha);
   // return crypto.createHash('sha256').update(buffer).digest();

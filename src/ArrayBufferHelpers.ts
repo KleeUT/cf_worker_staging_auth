@@ -1,9 +1,9 @@
 export function str2Uin8Array(str: string): Uint8Array {
-  console.log('converting string: ' + str);
+  // console.log('converting string: ' + str);
   // const a = new TextEncoder().encode(str);
   // console.log(a.length);
   // return a;
-  const buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
+  const buf = new ArrayBuffer(str.length); // 2 bytes for each char
   const bufView = new Uint8Array(buf);
 
   console.log('created buffer');

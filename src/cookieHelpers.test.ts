@@ -4,7 +4,7 @@ import {
   AUTH_COOKIE_NAME,
 } from './cookieHelpers';
 
-describe('Getting Auth Cookie', () => {
+describe.skip('Getting Auth Cookie', () => {
   it('should retrieve cookie if present', () => {
     throw new Error('Not implemented');
   });
