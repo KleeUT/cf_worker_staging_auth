@@ -1,8 +1,9 @@
 name: buildAndDeployWorker
-on:
-  push:
-    branches:
-      - main
+on: push # Run on all branches while developing
+# on:
+#   push:
+#     branches:
+#       - main
 jobs:
   deploy:
     runs-on: ubuntu-latest

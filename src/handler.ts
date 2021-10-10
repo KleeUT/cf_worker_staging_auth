@@ -37,11 +37,14 @@ export async function handleRequest(
     case '/auth/callback':
       response = await handleAuthCallback(request, response, auth0Helper);
       break;
-    case '/secrettest':
+    case '/secrettest': {
+      const code = await codeVerifier();
+      const challenge = generateChallenge(code);
       response = new Response(
-        `sssssh secret is "${AUTH0_CLIENT_SECRET}" clientid = "${AUTH0_CLIENT_ID}", verifierCode=${await codeVerifier()}`,
+        `sssssh secret is "${AUTH0_CLIENT_SECRET}" clientid = "${AUTH0_CLIENT_ID}", verifierCode=${code} challenge =${challenge}`,
       );
       break;
+    }
     default:
       response = await checkAuth(request, response, auth0Helper);
       break;
