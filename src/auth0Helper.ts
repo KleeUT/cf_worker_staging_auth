@@ -1,5 +1,8 @@
 const baseUrl = 'https://stage.saladsimulator.com';
 const auth0BaseUrl = 'https://staging-saladsimulator.au.auth0.com';
+const auth0Domain = 'staging-saladsimulator.au.auth0.com';
+const auth0ApiAudience = 'saladsimulator-staging';
+
 export type Fetch = (
   input: RequestInfo,
   init?: RequestInit | undefined,
@@ -17,16 +20,19 @@ export class Auth0Helper {
   constructor(private clientId: string, private clientSecret: string) {}
 
   public readonly authCallbackUrl = `${baseUrl}/auth/callback`;
-  public readonly auth0TokenUrl = `${auth0BaseUrl}/oauth/token`;
-
+  public readonly auth0TokenUrl =
+    'https://staging-saladsimulator.au.auth0.com/oauth/token';
+  private readonly staticState = 'static state';
   public authLoginUrl(challenge: string): string {
     const params = new URLSearchParams();
     params.append('response_type', 'code');
     params.append('client_id', this.clientId);
     params.append('redirect_uri', this.authCallbackUrl);
-    params.append('audience', 'saladsimulator-staging');
-    params.append('code_challenge', challenge);
-    params.append('code', 'S256');
+    params.append('audience', auth0ApiAudience);
+    params.append('scope', 'openid profile');
+    params.append('state', this.staticState);
+    // params.append('code_challenge', challenge); // Trying without PKCE
+    // params.append('code', 'S256');// Trying without PKCE
     const url = new URL(`${auth0BaseUrl}/authorize?${params.toString()}`);
 
     return url.toString();
@@ -40,13 +46,15 @@ export class Auth0Helper {
     fetch: Fetch,
     code: string,
     codeVerifier: string,
+    thisUri: string,
   ): Promise<TokenResponse> {
     const body = {
-      client_id: this.clientId,
-      client_secret: this.clientSecret, // for web applications
-      code,
-      code_verifier: codeVerifier,
       grant_type: 'authorization_code',
+      client_id: this.clientId,
+      client_secret:
+        'bOYmgFT6oOJooX87XprP10Fx1iSM6LtT-VlPuS37ePwBBFE5OUsvgxuw8wSP9hX6', //this.clientSecret, // for web applications
+      // code_verifier: codeVerifier, // trying without PKCE
+      code,
       redirect_uri: this.authCallbackUrl,
     };
     console.log(
@@ -57,7 +65,7 @@ export class Auth0Helper {
     const res = await fetch(`${this.auth0TokenUrl}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     });

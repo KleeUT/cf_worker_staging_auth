@@ -67,6 +67,7 @@ async function handleAuthCallback(
       fetch,
       code,
       codeVerifier,
+      request.url,
     );
     return new Response(`fetched a token } ${JSON.stringify(bod)}`);
   } catch (e: unknown) {
