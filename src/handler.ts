@@ -1,5 +1,5 @@
 import { Auth0Helper } from './auth0Helper';
-import { generateChallenge, codeVerifier } from './codeVerifier';
+import { generateChallenge, generateCodeVerifier } from './codeVerifier';
 import {
   clearAuthCookie,
   getAuthCookie,
@@ -10,10 +10,8 @@ import {
 import { verifyAuth } from './cookieValidator';
 
 declare const AUTH0_CLIENT_SECRET: string; // provided as cloudflare secret;
-declare const AUTH0_CLIENT_ID: string; // provided as cloudflare secret;
+declare const AUTH0_CLIENT_ID: string; // provided as cloudflare variable;
 
-// Here? ;
-// const auth0TokenUrl = `${auth0BaseUrl}/`;
 export async function handleRequest(
   request: Request,
   auth0Helper: Auth0Helper,
@@ -37,14 +35,20 @@ export async function handleRequest(
     case '/auth/callback':
       response = await handleAuthCallback(request, response, auth0Helper);
       break;
-    case '/secrettest': {
-      const code = await codeVerifier();
-      const challenge = await generateChallenge(code);
-      response = new Response(
-        `sssssh secret is "${AUTH0_CLIENT_SECRET}" clientid = "${AUTH0_CLIENT_ID}", verifierCode=${code} challenge =${challenge}`,
-      );
+    case '/secrettest':
+      {
+        const code = await generateCodeVerifier();
+        const challenge = await generateChallenge(code);
+        response = new Response(
+          `sssssh secret is "${AUTH0_CLIENT_SECRET}" clientid = "${AUTH0_CLIENT_ID}", verifierCode=${code} challenge =${challenge}`,
+        );
+      }
       break;
-    }
+    case '/challenge':
+      {
+        response = await generateMeAChallenge(request);
+      }
+      break;
     default:
       response = await checkAuth(request, response, auth0Helper);
       break;
@@ -53,9 +57,16 @@ export async function handleRequest(
   return response;
 }
 
+async function generateMeAChallenge(request: Request): Promise<Response> {
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get('code') || '';
+  const challenge = await generateChallenge(code);
+  return new Response(`Took ${code} and generated ${challenge}`);
+}
+
 async function handleAuthCallback(
   request: Request,
-  response: Response,
+  _response: Response,
   auth0Helper: Auth0Helper,
 ): Promise<Response> {
   const requestUrl = new URL(request.url);
@@ -65,14 +76,12 @@ async function handleAuthCallback(
   }
 
   const codeVerifier = await getCodeCookie(request);
-  const challenge = await generateChallenge(codeVerifier);
-  console.log(`Regenerated challenge=${challenge} from ${codeVerifier}`);
+  console.log(`Retrieved code verifier  ${codeVerifier}`);
   try {
     const bod = await auth0Helper.exchangeCodeForToken(
       fetch,
       code,
       codeVerifier,
-      request.url,
     );
     return new Response(`fetched a token } ${JSON.stringify(bod)}`);
   } catch (e: unknown) {
@@ -82,21 +91,25 @@ async function handleAuthCallback(
 
 async function checkAuth(
   request: Request,
-  response: Response,
+  _response: Response,
   auth0Helper: Auth0Helper,
 ): Promise<Response> {
   const authCookie = getAuthCookie(request);
   const valid = await verifyAuth(authCookie);
   if (!valid) {
     console.log('Creating verifier');
-    const code = await codeVerifier();
+    const codeVerifier = await generateCodeVerifier();
     console.log('Generating challenge');
-    const codeChallenge = await generateChallenge(code);
+    const codeChallenge = await generateChallenge(codeVerifier);
     const url = auth0Helper.authLoginUrl(codeChallenge);
     console.log(
-      `code and code challenge generated Code ${code}  challenge ${codeChallenge} loginUrl=${url}`,
+      `code and code challenge generated codeVerifier "${codeVerifier}"  codeChallenge "${codeChallenge}" loginUrl=${url}`,
     );
-    const res = setCodeCookie(request, Response.redirect(url, 302), code);
+    const res = setCodeCookie(
+      request,
+      Response.redirect(url, 302),
+      codeVerifier,
+    );
     console.log('done with response');
     return res;
   }
