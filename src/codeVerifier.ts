@@ -1,10 +1,7 @@
-// import { encode } from 'base64-arraybuffer';
-import { ab2str, str2Uin8Array } from './ArrayBufferHelpers';
+import { base64, getCryptoSubtle } from './windowWrapper';
 
-export async function codeVerifier(): Promise<string> {
-  const rando = randomCode();
-  const encoded = base64URLEncode(rando);
-  console.log(`Code Verifier strings random: ${rando} | encoded: ${encoded}`);
+export async function generateCodeVerifier(): Promise<string> {
+  const encoded = base64URLEncode(randomCode());
   return encoded;
 }
 
@@ -17,23 +14,33 @@ function randomCode(): string {
 function base64URLEncode(str: string): string {
   const b64 = btoa(str);
   const encoded = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  console.log(`Encoded ${encoded} | B64  ${b64}`);
   return encoded;
 }
 
-export async function generateChallenge(verifier: string): Promise<string> {
-  const shaCode = await sha256(str2Uin8Array(verifier));
-  const encoded = base64URLEncode(shaCode);
-  console.log(
-    `generating challenge verifier ${verifier} shaCode ${shaCode} encoded ${encoded}`,
+export async function generateNonce(): Promise<string> {
+  return urlEncodeB64(btoa(await randomCode()));
+}
+
+const sha256 = async (s: string): Promise<string> => {
+  const digestOp = await getCryptoSubtle().digest(
+    { name: 'SHA-256' },
+    new TextEncoder().encode(s),
   );
-  return encoded;
-}
+  return bufferToBase64UrlEncoded(new Uint8Array(digestOp));
+};
 
-async function sha256(data: Uint8Array): Promise<string> {
-  console.log('converting to sha');
-  const sha = await globalThis.crypto.subtle.digest('SHA-256', data);
-  console.log('Created sha');
-  return ab2str(sha);
-  // return crypto.createHash('sha256').update(buffer).digest();
+const bufferToBase64UrlEncoded = (input: number[] | Uint8Array): string => {
+  return urlEncodeB64(base64(String.fromCharCode(...Array.from(input))));
+};
+
+const urlEncodeB64 = (input: string) => {
+  const b64Chars: { [index: string]: string } = { '+': '-', '/': '_', '=': '' };
+  return input.replace(/[+/=]/g, (m: string) => b64Chars[m]);
+};
+
+export async function generateChallenge(
+  codeVerifierString: string,
+): Promise<string> {
+  const sha = await sha256(codeVerifierString);
+  return sha;
 }

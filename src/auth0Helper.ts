@@ -1,8 +1,7 @@
 const baseUrl = 'https://stage.saladsimulator.com';
 const auth0BaseUrl = 'https://staging-saladsimulator.au.auth0.com';
-const auth0Domain = 'staging-saladsimulator.au.auth0.com';
 const auth0ApiAudience = 'saladsimulator-staging';
-
+const scope = 'openid profile';
 export type Fetch = (
   input: RequestInfo,
   init?: RequestInit | undefined,
@@ -29,10 +28,11 @@ export class Auth0Helper {
     params.append('client_id', this.clientId);
     params.append('redirect_uri', this.authCallbackUrl);
     params.append('audience', auth0ApiAudience);
-    params.append('scope', 'openid profile');
+    params.append('scope', scope);
     params.append('state', this.staticState);
-    // params.append('code_challenge', challenge); // Trying without PKCE
-    // params.append('code', 'S256');// Trying without PKCE
+    params.append('code_challenge', challenge);
+    params.append('code_challenge_method', 'S256');
+
     const url = new URL(`${auth0BaseUrl}/authorize?${params.toString()}`);
 
     return url.toString();
@@ -46,22 +46,19 @@ export class Auth0Helper {
     fetch: Fetch,
     code: string,
     codeVerifier: string,
-    thisUri: string,
   ): Promise<TokenResponse> {
     const body = {
       grant_type: 'authorization_code',
       client_id: this.clientId,
-      client_secret:
-        'bOYmgFT6oOJooX87XprP10Fx1iSM6LtT-VlPuS37ePwBBFE5OUsvgxuw8wSP9hX6', //this.clientSecret, // for web applications
-      // code_verifier: codeVerifier, // trying without PKCE
+      client_secret: this.clientSecret,
+      code_verifier: codeVerifier,
       code,
       redirect_uri: this.authCallbackUrl,
+
+      audience: auth0ApiAudience,
+      scope: scope,
     };
-    console.log(
-      `callback url  ${
-        this.auth0TokenUrl
-      }, codeVerifier: ${codeVerifier}, ${JSON.stringify(body)}`,
-    );
+
     const res = await fetch(`${this.auth0TokenUrl}`, {
       method: 'POST',
       headers: {
@@ -70,26 +67,13 @@ export class Auth0Helper {
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      // if (!code) {
       const bod = await res.json();
-      console.log(bod);
       throw new Error(
         `failed to get code from url ${res.status} ${
           res.statusText
         } - Code ${code} bod: ${JSON.stringify(bod)}`,
       );
-      // }
     }
     return (await res.json()) as TokenResponse;
   }
 }
-
-/* 
-https://staging-saladsimulator.au.auth0.com/authorize?
-response_type=code&
-client_id=bwTWTXSpIJ5jIblPWxN278bU06J25ine&
-redirect_uri=https%253A%252F%252Fstage.saladsimulator.com%252Fauth%252Fcallback&
-audience=saladsimulator-staging&
-code_challenge=MmtSTnVQQ1VBRGhpM2RPNzN6L3ZTSThHeEJqdVV5QWZYU2QrOGJzWlpQQT0&
-code=S256
-*/
