@@ -1,23 +1,24 @@
 import { Auth0Helper } from './auth0Helper';
+import { AuthRepository } from './authRepository';
 import { generateChallenge, generateCodeVerifier } from './codeVerifier';
 import {
   clearAuthCookie,
   getAuthCookie,
+  getCallbackCookie,
   getCodeCookie,
+  setAuthCookie,
+  setCallbackCookie,
   setCodeCookie,
 } from './cookieHelpers';
 
 import { verifyAuth } from './cookieValidator';
 
-declare const AUTH0_CLIENT_SECRET: string; // provided as cloudflare secret;
-declare const AUTH0_CLIENT_ID: string; // provided as cloudflare variable;
-
 export async function handleRequest(
   request: Request,
   auth0Helper: Auth0Helper,
+  authRepo: AuthRepository,
 ): Promise<Response> {
   const url = new URL(request.url);
-  console.log(`Handling request for ${url.hostname} ${url.pathname}`);
   const authCookie = getAuthCookie(request);
 
   let response = new Response(
@@ -33,41 +34,35 @@ export async function handleRequest(
       response = Response.redirect(auth0Helper.auth0LogoutUrl());
       break;
     case '/auth/callback':
-      response = await handleAuthCallback(request, response, auth0Helper);
+      response = await handleAuthCallback(
+        request,
+        response,
+        auth0Helper,
+        authRepo,
+      );
       break;
     case '/secrettest':
       {
-        const code = await generateCodeVerifier();
-        const challenge = await generateChallenge(code);
         response = new Response(
-          `sssssh secret is "${AUTH0_CLIENT_SECRET}" clientid = "${AUTH0_CLIENT_ID}", verifierCode=${code} challenge =${challenge}`,
+          `Here's the key data ${(
+            await (await authRepo.allKeys()).map((x) => JSON.stringify(x))
+          ).join(', ')}`,
         );
       }
       break;
-    case '/challenge':
-      {
-        response = await generateMeAChallenge(request);
-      }
-      break;
     default:
-      response = await checkAuth(request, response, auth0Helper);
+      response = await checkAuth(request, response, auth0Helper, authRepo);
       break;
   }
 
   return response;
 }
 
-async function generateMeAChallenge(request: Request): Promise<Response> {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code') || '';
-  const challenge = await generateChallenge(code);
-  return new Response(`Took ${code} and generated ${challenge}`);
-}
-
 async function handleAuthCallback(
   request: Request,
   _response: Response,
   auth0Helper: Auth0Helper,
+  authRepo: AuthRepository,
 ): Promise<Response> {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -76,14 +71,19 @@ async function handleAuthCallback(
   }
 
   const codeVerifier = await getCodeCookie(request);
-  console.log(`Retrieved code verifier  ${codeVerifier}`);
   try {
     const bod = await auth0Helper.exchangeCodeForToken(
       fetch,
       code,
       codeVerifier,
     );
-    return new Response(`fetched a token } ${JSON.stringify(bod)}`);
+    const parsedAuth = await verifyAuth(bod.id_token);
+    if (!parsedAuth) {
+      throw new Error('Could not parse token');
+    }
+    await authRepo.save(bod.id_token, parsedAuth);
+    const res = await fetch(getCallbackCookie(request));
+    return setAuthCookie(request, res, bod.id_token);
   } catch (e: unknown) {
     return new Response((e as Error).message, { status: 500 });
   }
@@ -93,25 +93,22 @@ async function checkAuth(
   request: Request,
   _response: Response,
   auth0Helper: Auth0Helper,
+  authRepo: AuthRepository,
 ): Promise<Response> {
   const authCookie = getAuthCookie(request);
-  const valid = await verifyAuth(authCookie);
-  if (!valid) {
-    console.log('Creating verifier');
+  const validCookie = await verifyAuth(authCookie);
+  const storedAuth = await authRepo.get(authCookie);
+
+  if (!(validCookie && storedAuth)) {
     const codeVerifier = await generateCodeVerifier();
-    console.log('Generating challenge');
     const codeChallenge = await generateChallenge(codeVerifier);
     const url = auth0Helper.authLoginUrl(codeChallenge);
-    console.log(
-      `code and code challenge generated codeVerifier "${codeVerifier}"  codeChallenge "${codeChallenge}" loginUrl=${url}`,
-    );
     const res = setCodeCookie(
       request,
       Response.redirect(url, 302),
       codeVerifier,
     );
-    console.log('done with response');
-    return res;
+    return setCallbackCookie(request, res, request.url);
   }
-  return new Response(`${authCookie}--- cookie is valid? ${valid}`);
+  return fetch(request);
 }

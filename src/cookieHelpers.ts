@@ -1,17 +1,9 @@
 export const AUTH_COOKIE_NAME = '__stage_auth';
 export const CODE_COOKIE_NAME = 'code_cookie';
+export const CALLBACK_COOKIE_NAME = '__callback';
 export const cookieHeader = 'Cookie';
 
-export function getAuthCookie(request: Request): string {
-  return getCookie(request, AUTH_COOKIE_NAME);
-}
-
-export function getCodeCookie(request: Request): string {
-  return getCookie(request, CODE_COOKIE_NAME);
-}
-
 function getCookie(request: Request, cookieName: string): string {
-  console.log(`retrieving cookie ${cookieName}`);
   let result = '';
   const cookieString = request.headers.get(cookieHeader);
   if (cookieString) {
@@ -34,14 +26,19 @@ function setCookie(
   cookieName: string,
   value: string,
 ): Response {
-  const existingHeaders = response.headers ?? request.headers;
-  const headers = new Headers(existingHeaders);
-  headers.set(
-    'Set-cookie',
-    `${cookieName}=${value ?? ''}; HttpOnly; Secure; SameSite=Lax;`,
-  );
+  const responseHeaders = response.headers;
+  // const requestHeaders = request.headers;
+  const headers = new Headers(responseHeaders);
+  const cookieString = `${cookieName}=${
+    value ?? ''
+  }; HttpOnly; Secure;SameSite=Lax;Path=/;`;
+  headers.append('Set-cookie', cookieString);
 
   return new Response(response.body, { ...response, headers });
+}
+
+export function getCodeCookie(request: Request): string {
+  return getCookie(request, CODE_COOKIE_NAME);
 }
 
 export function setCodeCookie(
@@ -50,6 +47,30 @@ export function setCodeCookie(
   value: string,
 ): Response {
   return setCookie(request, response, CODE_COOKIE_NAME, value);
+}
+
+export function getCallbackCookie(request: Request): string {
+  return getCookie(request, CALLBACK_COOKIE_NAME);
+}
+
+export function setCallbackCookie(
+  request: Request,
+  response: Response,
+  value: string,
+): Response {
+  return setCookie(request, response, CALLBACK_COOKIE_NAME, value);
+}
+
+export function getAuthCookie(request: Request): string {
+  return getCookie(request, AUTH_COOKIE_NAME);
+}
+
+export function setAuthCookie(
+  request: Request,
+  response: Response,
+  value: string,
+): Response {
+  return setCookie(request, response, AUTH_COOKIE_NAME, value);
 }
 
 export function clearAuthCookie(
