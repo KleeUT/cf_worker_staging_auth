@@ -19,16 +19,10 @@ export class AuthRepository {
     if (storedToken) {
       try {
         return JSON.parse(storedToken) as JWT;
-      } catch (e) {}
+      } catch (e) {
+        return null;
+      }
     }
     return null;
-  }
-
-  async allKeys(): Promise<{ name: string; expiration?: number }[]> {
-    const results = await this.store.list();
-    return await results.keys.map((x) => ({
-      name: x.name,
-      expiration: x.expiration,
-    }));
   }
 }

@@ -21,13 +21,12 @@ function getCookie(request: Request, cookieName: string): string {
 }
 
 function setCookie(
-  request: Request,
+  _request: Request,
   response: Response,
   cookieName: string,
   value: string,
 ): Response {
   const responseHeaders = response.headers;
-  // const requestHeaders = request.headers;
   const headers = new Headers(responseHeaders);
   const cookieString = `${cookieName}=${
     value ?? ''

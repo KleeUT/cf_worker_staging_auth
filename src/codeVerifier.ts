@@ -1,7 +1,8 @@
-import { sha256 } from './cryptoHelper';
+import { sha256, urlEncodeB64 } from './cryptoHelper';
+import { base64Encode } from './windowWrapper';
 
 export async function generateCodeVerifier(): Promise<string> {
-  const encoded = base64URLEncode(randomCode());
+  const encoded = urlEncodeB64(base64Encode(randomCode()));
   return encoded;
 }
 
@@ -9,12 +10,6 @@ function randomCode(): string {
   let array = new Uint8Array(32);
   array = globalThis.crypto.getRandomValues(array);
   return String.fromCharCode.apply(null, Array.from(array));
-}
-
-function base64URLEncode(str: string): string {
-  const b64 = btoa(str);
-  const encoded = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  return encoded;
 }
 
 export async function generateChallenge(
