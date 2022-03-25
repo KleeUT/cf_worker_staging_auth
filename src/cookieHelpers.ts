@@ -21,17 +21,17 @@ function getCookie(request: Request, cookieName: string): string {
 }
 
 function setCookie(
-  request: Request,
+  _request: Request,
   response: Response,
   cookieName: string,
   value: string,
+  expiryTimeMillis = 3600,
 ): Response {
   const responseHeaders = response.headers;
-  // const requestHeaders = request.headers;
   const headers = new Headers(responseHeaders);
   const cookieString = `${cookieName}=${
     value ?? ''
-  }; HttpOnly; Secure;SameSite=Lax;Path=/;`;
+  }; HttpOnly; expires=${expiryTimeMillis}; Secure;SameSite=Lax;Path=/;`;
   headers.append('Set-cookie', cookieString);
 
   return new Response(response.body, { ...response, headers });
@@ -69,8 +69,9 @@ export function setAuthCookie(
   request: Request,
   response: Response,
   value: string,
+  expiry: number,
 ): Response {
-  return setCookie(request, response, AUTH_COOKIE_NAME, value);
+  return setCookie(request, response, AUTH_COOKIE_NAME, value, expiry * 1000);
 }
 
 export function clearAuthCookie(

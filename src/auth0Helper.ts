@@ -1,6 +1,6 @@
-const baseUrl = 'https://stage.saladsimulator.com';
-const auth0BaseUrl = 'https://staging-saladsimulator.au.auth0.com';
-const auth0ApiAudience = 'saladsimulator-staging';
+// const baseUrl = 'https://stage.saladsimulator.com';
+// const auth0BaseUrl = 'https://staging-saladsimulator.au.auth0.com';
+// const auth0ApiAudience = 'saladsimulator-staging';
 const scope = 'openid profile';
 export type Fetch = (
   input: RequestInfo,
@@ -16,30 +16,47 @@ export type TokenResponse = {
 };
 
 export class Auth0Helper {
-  constructor(private clientId: string, private clientSecret: string) {}
+  private clientId: string;
+  private clientSecret: string;
+  private baseUrl: string;
+  private auth0BaseUrl: string;
+  private auth0ApiAudience: string;
+  private authCallbackUrl: string;
 
-  public readonly authCallbackUrl = `${baseUrl}/auth/callback`;
-  public readonly auth0TokenUrl =
-    'https://staging-saladsimulator.au.auth0.com/oauth/token';
+  constructor(props: {
+    clientId: string;
+    clientSecret: string;
+    baseUrl: string;
+    auth0BaseUrl: string;
+    auth0ApiAudience: string;
+  }) {
+    this.clientId = props.clientId;
+    this.clientSecret = props.clientSecret;
+    this.baseUrl = props.baseUrl;
+    this.auth0BaseUrl = props.auth0BaseUrl;
+    this.auth0ApiAudience = props.auth0ApiAudience;
+    this.authCallbackUrl = `${this.baseUrl}/auth/callback`;
+  }
+
   private readonly staticState = 'static state';
   public authLoginUrl(challenge: string): string {
     const params = new URLSearchParams();
     params.append('response_type', 'code');
     params.append('client_id', this.clientId);
     params.append('redirect_uri', this.authCallbackUrl);
-    params.append('audience', auth0ApiAudience);
+    params.append('audience', this.auth0ApiAudience);
     params.append('scope', scope);
     params.append('state', this.staticState);
     params.append('code_challenge', challenge);
     params.append('code_challenge_method', 'S256');
 
-    const url = new URL(`${auth0BaseUrl}/authorize?${params.toString()}`);
+    const url = new URL(`${this.auth0BaseUrl}/authorize?${params.toString()}`);
 
     return url.toString();
   }
 
   public auth0LogoutUrl(): string {
-    return `${auth0BaseUrl}/v2/logout`;
+    return `${this.auth0BaseUrl}/v2/logout`;
   }
 
   public async exchangeCodeForToken(
@@ -55,11 +72,12 @@ export class Auth0Helper {
       code,
       redirect_uri: this.authCallbackUrl,
 
-      audience: auth0ApiAudience,
+      audience: this.auth0ApiAudience,
       scope: scope,
     };
 
-    const res = await fetch(`${this.auth0TokenUrl}`, {
+    const auth0TokenUrl = `${this.auth0BaseUrl}/oauth/token`;
+    const res = await fetch(`${auth0TokenUrl}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

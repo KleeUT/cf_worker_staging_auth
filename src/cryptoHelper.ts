@@ -1,4 +1,4 @@
-import { base64, getCryptoSubtle } from './windowWrapper';
+import { base64Encode, getCryptoSubtle } from './windowWrapper';
 
 export const sha256 = async (s: string): Promise<string> => {
   const digestOp = await getCryptoSubtle().digest(
@@ -14,5 +14,5 @@ export const urlEncodeB64 = (input: string): string => {
 };
 
 const bufferToBase64UrlEncoded = (input: number[] | Uint8Array): string => {
-  return urlEncodeB64(base64(String.fromCharCode(...Array.from(input))));
+  return urlEncodeB64(base64Encode(String.fromCharCode(...Array.from(input))));
 };
