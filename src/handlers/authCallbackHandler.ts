@@ -40,7 +40,12 @@ export function createAuthCallbackHandler(
       await authRepo.save(responseBody.id_token, parsedAuth);
       const res = await fetch(getCallbackCookie(request));
       // set the cookie so that future requests are allowed through.
-      return setAuthCookie(request, res, responseBody.id_token);
+      return setAuthCookie(
+        request,
+        res,
+        responseBody.id_token,
+        parsedAuth.body.exp,
+      );
     } catch (e: unknown) {
       return new Response((e as Error).message, { status: 500 });
     }
