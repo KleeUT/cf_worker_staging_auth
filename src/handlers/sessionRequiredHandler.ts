@@ -15,15 +15,12 @@ export function createSessionRequiredHandler(
   return async (request: Request): Promise<Response> => {
     // get the token from the request header
     const authCookie = getAuthCookie(request);
-
-    // ensure the token is a valid JWT
-    const decodedToken = await decodeToken(authCookie);
-
+    
     // retrieve the stored authentication from KV
     const storedAuth = await authRepo.get(authCookie);
 
     // if the user is known pass the request to the origin;
-    if (decodedToken || storedAuth) {
+    if (authCookie || storedAuth) {
       return fetch(request);
     }
 
