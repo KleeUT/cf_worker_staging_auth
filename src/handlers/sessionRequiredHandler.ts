@@ -15,16 +15,19 @@ export function createSessionRequiredHandler(
   return async (request: Request): Promise<Response> => {
     // get the token from the request header
     const authCookie = getAuthCookie(request);
-    
+    // if there is no cookie redirect to auth
+    if(!authCookie){
+      return redirectToAuth(request);
+    }
     // retrieve the stored authentication from KV
     const storedAuth = await authRepo.get(authCookie);
 
     // if the user is known pass the request to the origin;
-    if (authCookie || storedAuth) {
-      return fetch(request);
+    if (!storedAuth) {
+      return redirectToAuth(request);
     }
-
-    return redirectToAuth(request);
+    
+    return fetch(request);
   };
 
   async function redirectToAuth(request: Request): Promise<Response> {
