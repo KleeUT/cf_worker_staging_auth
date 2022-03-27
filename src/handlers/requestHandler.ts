@@ -5,6 +5,7 @@ import { createLogoutHandler } from './logoutHandler';
 import { createSessionRequiredHandler } from './sessionRequiredHandler';
 
 export function createHandler(): (request: Request) => Promise<Response> {
+  // Global variables from wrangler.toml for variables. Secrets uploaded to Cloudflare. 
   const auth0Helper = new Auth0Helper({
     clientId: AUTH0_CLIENT_ID,
     clientSecret: AUTH0_CLIENT_SECRET,

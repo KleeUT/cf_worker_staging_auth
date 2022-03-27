@@ -9,3 +9,7 @@ export function base64Encode(data: string): string {
 export function base64Decode(data: string): string {
   return atob(data);
 }
+
+export function getCrypto(): Crypto {
+  return globalThis.crypto;
+}
