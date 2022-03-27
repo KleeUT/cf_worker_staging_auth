@@ -1,4 +1,4 @@
-import { sha256, urlEncodeB64 } from './cryptoHelper';
+import { sha256, urlEncodeB64, getRandomData } from './cryptoHelper';
 import { base64Encode } from './windowWrapper';
 
 export async function generateCodeVerifier(): Promise<string> {
@@ -8,7 +8,7 @@ export async function generateCodeVerifier(): Promise<string> {
 
 function randomCode(): string {
   let array = new Uint8Array(32);
-  array = globalThis.crypto.getRandomValues(array);
+  array = getRandomData(array)
   return String.fromCharCode.apply(null, Array.from(array));
 }
 

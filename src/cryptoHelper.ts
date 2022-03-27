@@ -1,4 +1,8 @@
-import { base64Encode, getCryptoSubtle } from './windowWrapper';
+import { base64Encode, getCrypto, getCryptoSubtle } from './windowWrapper';
+
+export const getRandomData = (array: Uint8Array): Uint8Array => {
+  return getCrypto().getRandomValues(array);
+}
 
 export const sha256 = async (s: string): Promise<string> => {
   const digestOp = await getCryptoSubtle().digest(
