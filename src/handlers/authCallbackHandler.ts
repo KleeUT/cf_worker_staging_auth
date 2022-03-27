@@ -5,6 +5,7 @@ import {
   getCodeCookie,
   setAuthCookie,
 } from '../cookieHelpers';
+import { sha256 } from '../cryptoHelper';
 import { decodeToken } from '../tokenHelpers';
 
 export function createAuthCallbackHandler(
@@ -36,14 +37,16 @@ export function createAuthCallbackHandler(
       if (!parsedAuth) {
         throw new Error('Could not parse token');
       }
+      // hash the token 
+      const hashedToken = await sha256(responseBody.id_token);
       // store the token
-      await authRepo.save(responseBody.id_token, parsedAuth);
+      await authRepo.save(hashedToken, parsedAuth);
       const res = await fetch(getCallbackCookie(request));
       // set the cookie so that future requests are allowed through.
       return setAuthCookie(
         request,
         res,
-        responseBody.id_token,
+        hashedToken,
         parsedAuth.body.exp,
       );
     } catch (e: unknown) {

@@ -7,15 +7,13 @@ export class AuthRepository {
   constructor(private store: KVNamespace) {}
 
   async save(token: string, parsedToken: JWT): Promise<void> {
-    const key = await sha256(token);
-    await this.store.put(key, JSON.stringify(parsedToken), {
+    await this.store.put(token, JSON.stringify(parsedToken), {
       expiration: parsedToken.body.exp,
     });
   }
 
   async get(token: string): Promise<JWT | null> {
-    const key = await sha256(token);
-    const storedToken = await this.store.get(key, 'text');
+    const storedToken = await this.store.get(token, 'text');
     if (storedToken) {
       try {
         return JSON.parse(storedToken) as JWT;
