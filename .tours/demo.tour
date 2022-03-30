@@ -1,0 +1,62 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "demo",
+  "steps": [
+    {
+      "file": "src/index.ts",
+      "description": "Handle fetch events",
+      "line": 2
+    },
+    {
+      "file": "src/handlers/requestHandler.ts",
+      "description": "Create handlers using global variables",
+      "line": 6
+    },
+    {
+      "file": "src/bindings.d.ts",
+      "description": "Declare global variables for TypeScript\n* Variables\n* Secrets\n* Namespaces",
+      "line": 1,
+      "selection": {
+        "start": {
+          "line": 4,
+          "character": 9
+        },
+        "end": {
+          "line": 4,
+          "character": 28
+        }
+      }
+    },
+    {
+      "file": "wrangler.toml",
+      "description": "Define variables and namespaces",
+      "line": 13
+    },
+    {
+      "file": "src/handlers/requestHandler.ts",
+      "description": "Path based routing",
+      "line": 24
+    },
+    {
+      "file": "src/handlers/sessionRequiredHandler.ts",
+      "description": "Handle most requests checking authentication",
+      "line": 14
+    },
+    {
+      "file": "src/handlers/sessionRequiredHandler.ts",
+      "description": "If the user isnt authenticated. ",
+      "line": 31
+    },
+    {
+      "file": "src/handlers/authCallbackHandler.ts",
+      "description": "User is redirected back to here",
+      "line": 14
+    },
+    {
+      "file": ".github/workflows/buildAndDeploy.yml",
+      "description": "Deploy the worker through github actions",
+      "line": 1
+    }
+  ],
+  "ref": "code-tour"
+}

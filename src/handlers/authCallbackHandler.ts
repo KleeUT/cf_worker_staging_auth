@@ -32,16 +32,20 @@ export function createAuthCallbackHandler(
         code,
         codeVerifier,
       );
+
       // ensure the token is in the correct JWT format
       const parsedAuth = await decodeToken(responseBody.id_token);
       if (!parsedAuth) {
         throw new Error('Could not parse token');
       }
+      
       // hash the token 
       const hashedToken = await sha256(responseBody.id_token);
       // store the token
       await authRepo.save(hashedToken, parsedAuth);
-      const res = await fetch(getCallbackCookie(request));
+
+      // send the user back to where they were trying to access to start with 
+      const res = Response.redirect(getCallbackCookie(request));
       // set the cookie so that future requests are allowed through.
       return setAuthCookie(
         request,
@@ -49,6 +53,7 @@ export function createAuthCallbackHandler(
         hashedToken,
         parsedAuth.body.exp,
       );
+
     } catch (e: unknown) {
       return new Response((e as Error).message, { status: 500 });
     }
